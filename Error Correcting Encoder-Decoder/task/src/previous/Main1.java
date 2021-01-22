@@ -1,9 +1,9 @@
-package correcter;
+package previous;
 
 import java.util.Random;
 import java.util.Scanner;
 
-public class Main {
+public class Main1 {
     public static void main(String[] args) {
         String subject = new Scanner(System.in).nextLine();
         System.out.println(new ErrorEmulator(subject).getDistorted());
