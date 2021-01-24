@@ -1,10 +1,10 @@
-package correcter;
+package previous;
 
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Main {
+public class Main2 {
     public static void main(String[] args) {
         String msg = new Scanner(System.in).nextLine();
         EncoderDecoder.rockAndRoll(msg);
