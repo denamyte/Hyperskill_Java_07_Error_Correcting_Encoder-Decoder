@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/210079/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Sun, 24 Jan 2021 00:25:27 UTC
+update_date: Sat, 30 Jan 2021 00:48:08 UTC
 stages:
 - id: 312
   step: 5454
@@ -13,7 +13,7 @@ stages:
   is_completed: true
 - id: 314
   step: 5456
-  is_completed: false
+  is_completed: true
 - id: 315
   step: 5457
   is_completed: false
@@ -28,16 +28,16 @@ topics:
     theory_id: 3614
   - title: IDE
     theory_id: 10996
-  - title: Write, compile, and run
-    theory_id: 3739
-  - title: JVM, JRE, and JDK
-    theory_id: 3499
   - title: Introduction to operating systems
     theory_id: 9704
   - title: Command line overview
     theory_id: 8977
   - title: Parameters and options
     theory_id: 9746
+  - title: Write, compile, and run
+    theory_id: 3739
+  - title: JVM, JRE, and JDK
+    theory_id: 3499
   - title: Running programs on your computer
     theory_id: 3746
   - title: Introduction to Java
@@ -158,7 +158,7 @@ topics:
     theory_id: 8837
   - title: Input streams
     theory_id: 9723
-  - title: Bitwise and bit-shift operations
-    theory_id: 3515
   - title: Formatted output
     theory_id: 7046
+  - title: Bitwise and bit-shift operations
+    theory_id: 3515

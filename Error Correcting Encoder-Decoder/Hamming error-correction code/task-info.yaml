@@ -15,8 +15,6 @@ files:
 - name: test/CorrecterTest.java
   visible: false
   text: |+
-    import correcter.Main;
-
     import org.hyperskill.hstest.testcase.CheckResult;
     import org.hyperskill.hstest.stage.StageTest;
     import org.hyperskill.hstest.testcase.TestCase;
@@ -43,10 +41,6 @@ files:
         private static File received = null;
         private static File encoded = null;
         private static File decoded = null;
-
-        public CorrecterTest() throws Exception {
-            super(Main.class);
-        }
 
         @Override
         public List<TestCase<TestClue>> generate() {

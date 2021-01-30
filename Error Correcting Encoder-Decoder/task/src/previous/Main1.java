@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Main1 {
-    public static void main(String[] args) {
+    public static void main_(String[] args) {
         String subject = new Scanner(System.in).nextLine();
         System.out.println(new ErrorEmulator(subject).getDistorted());
     }

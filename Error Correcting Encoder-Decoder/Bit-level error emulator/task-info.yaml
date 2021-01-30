@@ -15,8 +15,6 @@ files:
 - name: test/CorrecterTest.java
   visible: false
   text: |
-    import correcter.Main;
-
     import org.hyperskill.hstest.testcase.CheckResult;
     import org.hyperskill.hstest.stage.StageTest;
     import org.hyperskill.hstest.testcase.TestCase;
@@ -35,10 +33,6 @@ files:
     public class CorrecterTest extends StageTest<TestClue> {
 
         public static File received = null;
-
-        public CorrecterTest() throws Exception {
-            super(Main.class);
-        }
 
         @Override
         public List<TestCase<TestClue>> generate() {
@@ -169,6 +163,12 @@ files:
         }
     }
   learner_created: false
+- name: received.txt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/58/stages/314/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sat, 30 Jan 2021 02:27:16 UTC
 record: -1
