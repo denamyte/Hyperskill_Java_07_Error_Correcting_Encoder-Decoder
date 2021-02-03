@@ -343,6 +343,10 @@ files:
     }
 
   learner_created: false
+- name: received.txt
+  visible: true
+  text: "uu\x14(3�0\0v�<<(�64\x11<'\00;\x16u21)4!u\x11=4"
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/58/stages/315/implement#comment
 status: Unchecked
 record: -1

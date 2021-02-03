@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/210079/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Sat, 30 Jan 2021 00:48:08 UTC
+update_date: Tue, 02 Feb 2021 23:35:22 UTC
 stages:
 - id: 312
   step: 5454
@@ -24,12 +24,10 @@ topics:
   0:
   - title: Units of information
     theory_id: 6865
-  - title: Introduction to OOP
-    theory_id: 3614
-  - title: IDE
-    theory_id: 10996
   - title: Introduction to operating systems
     theory_id: 9704
+  - title: IDE
+    theory_id: 10996
   - title: Command line overview
     theory_id: 8977
   - title: Parameters and options
@@ -40,6 +38,8 @@ topics:
     theory_id: 3499
   - title: Running programs on your computer
     theory_id: 3746
+  - title: Introduction to OOP
+    theory_id: 3614
   - title: Introduction to Java
     theory_id: 3500
   - title: Basic literals
@@ -50,10 +50,6 @@ topics:
     theory_id: 3749
   - title: Types and variables
     theory_id: 3518
-  - title: Sizes and ranges
-    theory_id: 3532
-  - title: Type casting
-    theory_id: 3510
   - title: Comments
     theory_id: 3520
   - title: Naming variables
@@ -84,6 +80,10 @@ topics:
     theory_id: 3507
   - title: Switch statement
     theory_id: 3504
+  - title: Sizes and ranges
+    theory_id: 3532
+  - title: Type casting
+    theory_id: 3510
   - title: Calling a method
     theory_id: 10973
   - title: Declaring a method
