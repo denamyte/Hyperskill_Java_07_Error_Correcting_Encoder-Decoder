@@ -2,8 +2,7 @@ package correcter;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.*;
 
 public class Main {
     private static final Map<Command, Operation> operationMap = Map.of(
@@ -15,8 +14,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.print("Write a mode: ");
         String input = new Scanner(System.in).nextLine().toUpperCase();
-        Command command = Command.valueOf(input);
-        operationMap.get(command).action();
+        operationMap.get(Command.valueOf(input)).action();
     }
 }
 
@@ -25,45 +23,21 @@ enum Command {
 }
 
 abstract class Operation {
-    /** Returns the name of the file to read from. */
     protected abstract String getReadName();
 
-    /** Returns the name of the file to write to. */
     protected abstract String getWriteName();
 
-    /** The only open method in this class hierarchy. Performs read-write operations and calls
-     * in each successor the method with a specific byte-changing operation. */
+    /** Performs a specific operation with bytes */
+    protected abstract byte[] performOperation(byte[] bytes);
+
     public void action() {
         try (InputStream inputStream = new FileInputStream(getReadName());
              OutputStream outputStream = new FileOutputStream(getWriteName())) {
-            ByteArrayInputStream is = new ByteArrayInputStream(inputStream.readAllBytes());
-            performOperation(is).writeTo(outputStream);
+            byte[] bytesBefore = inputStream.readAllBytes();
+            byte[] bytesAfter = performOperation(bytesBefore);
+            outputStream.write(bytesAfter);
         } catch (IOException ignored) {
         }
-    }
-
-    /** Performs a specific operation in order to change the bytes from the input stream. */
-    protected abstract ByteArrayOutputStream performOperation(ByteArrayInputStream is);
-
-    /** Reads bytes from the input stream and converts them to a collection of bits */
-    protected static List<Integer> getBits(ByteArrayInputStream is) {
-        return IntStream.generate(is::read)
-                .takeWhile(value -> value > -1)
-                .flatMap(Operation::byteToBits)
-                .boxed()
-                .collect(Collectors.toList());
-    }
-
-    protected static int[] getBits2(ByteArrayInputStream inputStream) {
-        // TODO: 2/3/21 Try to work with array instead of collection
-
-        return new int[0];
-    }
-
-    private static IntStream byteToBits(int value) {
-        return IntStream.iterate(7, i -> i - 1).limit(8)
-                .map(shift -> value & (1 << shift))
-                .map(result -> result == 0 ? 0 : 1);
     }
 
 }
@@ -81,30 +55,20 @@ class EncodeOperation extends Operation {
     }
 
     @Override
-    protected ByteArrayOutputStream performOperation(ByteArrayInputStream is) {
-        //  - turn bytes into bits(0 or 1) and write them to a collection
-        //  - complement the collection of bits with 0s to a length multiple of 3
-        //  - take portions of 3 bits, complement them with a parity bit, double each bit and save
-        //    a byte to the output stream
-        List<Integer> bits = getBits(is);
-        while (bits.size() % 3 != 0) {
-            bits.add(0);
+    protected byte[] performOperation(byte[] bytes) {
+        BitsReader reader = new BitsReader(bytes);
+        int writeSize = (int) Math.ceil((double) bytes.length * 8 / 3);
+        BitsWriter writer = new BitsWriter(writeSize);
+
+        while (reader.hasNext()) {
+            int[] bits = reader.readBits(3);
+            for (int bit : bits) {
+                writer.writeBits(bit, bit);
+            }
+            int parity = Arrays.stream(bits).reduce(0, Integer::sum) % 2;
+            writer.writeBits(parity, parity);
         }
-        return IntStream.range(0, bits.size() / 3)
-                .map(i -> i * 3)
-                .mapToObj(i -> bits.subList(i, i + 3))
-                .map(EncodeOperation::encodeBitsToByte)
-                .collect(() -> new ByteArrayOutputStream(bits.size() / 3),
-                         ByteArrayOutputStream::write, (o1, o2) -> {});
-    }
-
-    private static int encodeBitsToByte(final List<Integer> bits) {
-        var bits4 = new ArrayList<>(bits);
-        int parity = bits.stream().reduce(0, Integer::sum) % 2;
-        bits4.add(parity);
-
-        return IntStream.range(0, 4).map(i -> (3 * bits4.get(i)) << (6 - i * 2))
-                .sum();
+        return writer.getBytes();
     }
 }
 
@@ -122,17 +86,14 @@ class SendOperation extends Operation {
     }
 
     @Override
-    protected ByteArrayOutputStream performOperation(ByteArrayInputStream is) {
-        // TODO: 2/3/21 Implement
-
-        return new ByteArrayOutputStream();
+    protected byte[] performOperation(byte[] bytes) {
+        byte[] copy = Arrays.copyOf(bytes, bytes.length);
+        for (int i = 0; i < copy.length; i++) {
+            int bit = 1 << rnd.nextInt(8);
+            copy[i] += ((bit & copy[i]) == 0 ? 1 : -1) * bit;
+        }
+        return copy;
     }
-
-    private int distort(int value) {
-        int bit = 1 << rnd.nextInt(8);
-        return value + ((bit & value) == 0 ? 1 : -1) * bit;
-    }
-
 }
 
 class DecodeOperation extends Operation {
@@ -148,9 +109,61 @@ class DecodeOperation extends Operation {
     }
 
     @Override
-    protected ByteArrayOutputStream performOperation(ByteArrayInputStream is) {
+    protected byte[] performOperation(byte[] bytes) {
         // TODO: 2/3/21 Implement
 
-        return new ByteArrayOutputStream();
+        return null;
+    }
+}
+
+/** A class for reading an arbitrary amount of bits from a byte array. */
+class BitsReader {
+    private final byte[] bytes;
+    /** The size of the storage in bits. */
+    private int pos;
+
+    public BitsReader(byte[] bytes) {
+        this.bytes = bytes;
+    }
+
+    public boolean hasNext() {
+        return pos < bytes.length * 8;
+    }
+
+    public Integer next() {
+        int positioned = 1 << 7 - pos % 8;
+        return hasNext() ? bytes[pos++ / 8] & positioned : -1;
+    }
+
+    public int[] readBits(int count) {
+        return hasNext()
+                ? IntStream.generate(this::next).limit(count).map(bit -> bit > 0 ? 1 : 0).toArray()
+                : new int[0];
+    }
+}
+
+/** A class for writing an arbitrary amount of bits into a predefined array. */
+class BitsWriter {
+    private final byte[] bytes;
+    private int pos;
+
+    public BitsWriter(int size) {
+        bytes = new byte[size];
+    }
+
+    public void writeBits(int... bits) {
+        for (int bit : bits) {
+            if (pos >= bytes.length * 8) {
+                return;
+            }
+            if (bit == 1) {
+                bytes[pos / 8] |= bit << 7 - pos % 8;
+            }
+            pos++;
+        }
+    }
+
+    public byte[] getBytes() {
+        return bytes;
     }
 }
