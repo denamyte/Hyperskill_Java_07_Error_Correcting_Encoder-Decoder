@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.print("Write a mode: ");
         String input = new Scanner(System.in).nextLine().toUpperCase();
-        operationMap.get(Command.valueOf(input)).action();
+        operationMap.get(Command.valueOf(input)).go();
     }
 }
 
@@ -30,7 +30,7 @@ abstract class Operation {
     /** Performs a specific operation with bytes */
     protected abstract byte[] performOperation(byte[] bytes);
 
-    public void action() {
+    public void go() {
         try (InputStream inputStream = new FileInputStream(getReadName());
              OutputStream outputStream = new FileOutputStream(getWriteName())) {
             byte[] bytesBefore = inputStream.readAllBytes();
@@ -90,7 +90,7 @@ class SendOperation extends Operation {
         byte[] copy = Arrays.copyOf(bytes, bytes.length);
         for (int i = 0; i < copy.length; i++) {
             int bit = 1 << rnd.nextInt(8);
-            copy[i] += ((bit & copy[i]) == 0 ? 1 : -1) * bit;
+            copy[i] += ((bit & copy[i]) == 0 ? 1 : -1) * bit;  // Spoiling a random bit
         }
         return copy;
     }
@@ -110,29 +110,68 @@ class DecodeOperation extends Operation {
 
     @Override
     protected byte[] performOperation(byte[] bytes) {
-        // TODO: 2/3/21 Implement
+        BitsReader reader = new BitsReader(bytes);
+        int writeSize = (int) Math.floor((double) bytes.length * 3 / 8);
+        BitsWriter writer = new BitsWriter(writeSize);
+        while (reader.hasNext()) {
+            final int[] raw = reader.readBits(8);
+            int[] bits = IntStream.range(0, 4).map(i -> raw[i * 2] == raw[i * 2 + 1] ? raw[i * 2] : -1).toArray();
+            int badIndex = linearSearch(bits, -1);
+            // if some bit is distorted and the index of the distorted bit is not the parity index
+            if (badIndex != -1 && bits[3] != -1) {
+                int recoveredValue = (bits[0] + bits[1] + bits[2] + 1) % 2 == bits[3] ? 0 : 1;
+                bits[badIndex] = recoveredValue;
+            }
+            for (int i = 0; i < 3; i++) {
+                writer.writeBits(bits[i]);
+            }
+        }
+        return writer.getBytes();
+    }
 
-        return null;
+    private int linearSearch(int[] ar, int value) {
+        for (int i = 0; i < ar.length; i++) {
+            if (ar[i] == value) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
 
-/** A class for reading an arbitrary amount of bits from a byte array. */
-class BitsReader {
-    private final byte[] bytes;
-    /** The size of the storage in bits. */
-    private int pos;
+class BitsOperations {
+    protected final byte[] bytes;
+    /** The position of the bit pointer. */
+    protected int pos;
 
-    public BitsReader(byte[] bytes) {
+    public BitsOperations(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    public int bitPos() {
+        return 1 << 7 - pos % 8;
     }
 
     public boolean hasNext() {
         return pos < bytes.length * 8;
     }
 
+}
+
+/** A class for reading an arbitrary amount of bits from a byte array. */
+class BitsReader extends BitsOperations {
+
+    public BitsReader(byte[] bytes) {
+        super(bytes);
+    }
+
     public Integer next() {
-        int positioned = 1 << 7 - pos % 8;
-        return hasNext() ? bytes[pos++ / 8] & positioned : -1;
+        if (hasNext()) {
+            var res = bytes[pos / 8] & bitPos();
+            pos++;
+            return res;
+        }
+        return -1;
     }
 
     public int[] readBits(int count) {
@@ -143,21 +182,19 @@ class BitsReader {
 }
 
 /** A class for writing an arbitrary amount of bits into a predefined array. */
-class BitsWriter {
-    private final byte[] bytes;
-    private int pos;
+class BitsWriter extends BitsOperations {
 
     public BitsWriter(int size) {
-        bytes = new byte[size];
+        super(new byte[size]);
     }
 
     public void writeBits(int... bits) {
         for (int bit : bits) {
-            if (pos >= bytes.length * 8) {
+            if (!hasNext()) {
                 return;
             }
             if (bit == 1) {
-                bytes[pos / 8] |= bit << 7 - pos % 8;
+                bytes[pos / 8] |= bitPos();
             }
             pos++;
         }
