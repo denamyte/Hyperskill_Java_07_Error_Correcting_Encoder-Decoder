@@ -1,27 +1,33 @@
-package correcter;
+package previous;
 
 import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class Main {
-    private static final Map<String, Operation> operationMap = Map.of(
-            "encode", new EncodeOperation(),
-            "send", new SendOperation(),
-            "decode", new DecodeOperation()
+public class Main4 {
+    private static final Map<Command, Operation4> operationMap = Map.of(
+            Command.ENCODE, new EncodeOperation4(),
+            Command.SEND, new SendOperation4(),
+            Command.DECODE, new DecodeOperation4()
     );
 
-    public static void main(String[] args) {
+    public static void main_(String[] args) {
         System.out.print("Write a mode: ");
-        operationMap.get(new Scanner(System.in).nextLine()).go();
+        String input = new Scanner(System.in).nextLine().toUpperCase();
+        operationMap.get(Command.valueOf(input)).go();
     }
 }
 
-abstract class Operation {
+enum Command {
+    ENCODE, SEND, DECODE
+}
+
+abstract class Operation4 {
     protected abstract String getReadName();
 
     protected abstract String getWriteName();
 
+    /** Performs a specific operation with bytes */
     protected abstract byte[] performOperation(byte[] bytes);
 
     public void go() {
@@ -34,18 +40,9 @@ abstract class Operation {
         }
     }
 
-    protected static int hammingCodeParity(int[] bits, int powerOf2) {
-        int s = 0;
-        for (int i = powerOf2 - 1; i < 8; i += powerOf2 * 2) {
-            for (int j = i; j < i + powerOf2; j++) {
-                s += bits[j];
-            }
-        }
-        return s % 2;
-    }
 }
 
-class EncodeOperation extends Operation {
+class EncodeOperation4 extends Operation4 {
 
     @Override
     protected String getReadName() {
@@ -59,27 +56,23 @@ class EncodeOperation extends Operation {
 
     @Override
     protected byte[] performOperation(byte[] bytes) {
-        BitsReader reader = new BitsReader(bytes);
-        BitsWriter writer = new BitsWriter(bytes.length * 2);
+        BitsReader4 reader = new BitsReader4(bytes);
+        int writeSize = (int) Math.ceil((double) bytes.length * 8 / 3);
+        BitsWriter4 writer = new BitsWriter4(writeSize);
+
         while (reader.hasNext()) {
-            int[] dst = copySignificantBits(reader);
-            IntStream.of(1, 2, 4).forEach(power -> dst[power - 1] = hammingCodeParity(dst, power));
-            writer.writeBits(dst);
+            int[] bits = reader.readBits(3);
+            for (int bit : bits) {
+                writer.writeBits(bit, bit);
+            }
+            int parity = Arrays.stream(bits).reduce(0, Integer::sum) % 2;
+            writer.writeBits(parity, parity);
         }
         return writer.getBytes();
     }
-
-    private int[] copySignificantBits(BitsReader reader) {
-        int[] src = reader.readBits(4);
-        int[] dst = new int[8];
-        dst[2] = src[0];
-        System.arraycopy(src, 1, dst, 4, 3);
-        return dst;
-    }
-
 }
 
-class SendOperation extends Operation {
+class SendOperation4 extends Operation4 {
     Random rnd = new Random();
 
     @Override
@@ -103,7 +96,7 @@ class SendOperation extends Operation {
     }
 }
 
-class DecodeOperation extends Operation {
+class DecodeOperation4 extends Operation4 {
 
     @Override
     protected String getReadName() {
@@ -117,44 +110,41 @@ class DecodeOperation extends Operation {
 
     @Override
     protected byte[] performOperation(byte[] bytes) {
-        BitsReader reader = new BitsReader(bytes);
-        BitsWriter writer = new BitsWriter(bytes.length / 2);
+        BitsReader4 reader = new BitsReader4(bytes);
+        int writeSize = (int) Math.floor((double) bytes.length * 3 / 8);
+        BitsWriter4 writer = new BitsWriter4(writeSize);
         while (reader.hasNext()) {
-            int[] src = reader.readBits(8);
-            int badIndex = findBadIndex(src);
-
-            // Correcting wrong bit
-            if (badIndex >= 0) {
-                src[badIndex] = src[badIndex] == 1 ? 0 : 1;
+            final int[] raw = reader.readBits(8);
+            int[] bits = IntStream.range(0, 4).map(i -> raw[i * 2] == raw[i * 2 + 1] ? raw[i * 2] : -1).toArray();
+            int badIndex = linearSearch(bits, -1);
+            // if some bit is distorted and the index of the distorted bit is not the parity index
+            if (badIndex != -1 && bits[3] != -1) {
+                int recoveredValue = (bits[0] + bits[1] + bits[2] + 1) % 2 == bits[3] ? 0 : 1;
+                bits[badIndex] = recoveredValue;
             }
-
-            // Writing down the bits from the corrected array
-            writer.writeBits(src[2], src[4], src[5], src[6]);
+            for (int i = 0; i < 3; i++) {
+                writer.writeBits(bits[i]);
+            }
         }
         return writer.getBytes();
     }
 
-    private int findBadIndex(int[] src) {
-        // Obtaining an array without parity bits for calculating parities again
-        int[] srcParityCalc = Arrays.copyOf(src, 8);
-        IntStream.of(1, 2, 4).forEach(i -> srcParityCalc[i - 1] = 0);
-
-        // Finding out the index with a wrong bit
-        // (Selecting the powers of 2 which parities don't match, summing them - here is the wrong index)
-        return -1 + IntStream.of(1, 2, 4)
-                .map(power -> {
-                    int parity = hammingCodeParity(srcParityCalc, power);
-                    return parity == src[power - 1] ? 0 : power;
-                }).sum();
+    private int linearSearch(int[] ar, int value) {
+        for (int i = 0; i < ar.length; i++) {
+            if (ar[i] == value) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
 
-class BitsOperations {
+class BitsOperations4 {
     protected final byte[] bytes;
     /** The position of the bit pointer. */
     protected int pos;
 
-    public BitsOperations(byte[] bytes) {
+    public BitsOperations4(byte[] bytes) {
         this.bytes = bytes;
     }
 
@@ -169,9 +159,9 @@ class BitsOperations {
 }
 
 /** A class for reading an arbitrary amount of bits from a byte array. */
-class BitsReader extends BitsOperations {
+class BitsReader4 extends BitsOperations4 {
 
-    public BitsReader(byte[] bytes) {
+    public BitsReader4(byte[] bytes) {
         super(bytes);
     }
 
@@ -192,9 +182,9 @@ class BitsReader extends BitsOperations {
 }
 
 /** A class for writing an arbitrary amount of bits into a predefined array. */
-class BitsWriter extends BitsOperations {
+class BitsWriter4 extends BitsOperations4 {
 
-    public BitsWriter(int size) {
+    public BitsWriter4(int size) {
         super(new byte[size]);
     }
 
@@ -214,3 +204,4 @@ class BitsWriter extends BitsOperations {
         return bytes;
     }
 }
+

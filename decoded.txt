@@ -1,5 +1,2 @@
-This is a very difficult text
-1234567890
-abcdefghijklmnopqrstuvwxyz
-ABCDEFGHIJKLMNOPQRSTUVWXYZ
-The enD.
+It seems, I've solved this stage and the whole project.
+Satisfaction...

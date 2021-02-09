@@ -343,6 +343,26 @@ files:
     }
 
   learner_created: false
+- name: decoded.txt
+  visible: true
+  text: 5548172 6548 225147 23656595 5155
+  learner_created: true
+- name: encoded.txt
+  visible: true
+  text: "\x0f�3<3���\x0f�\0<\0���\x0f��3\0\0��\x0f�3<3\0�\0\x0f\0\0<\x0f\0�3\x0f�\
+    3<\0���\x0f��3\0\0�3\x0f��<<\0��\x0f��<3��\x0f\x0f�33\0\0��\x0f�3<3���"
+  learner_created: true
+- name: received.txt
+  visible: true
+  text: "\nĳ8;�p�\v�\x02=\x10��\x1f�ǳ\x04 ��\aL1�\x13@�\x10\n�\b=\n\x10��\n�7\x1c\b\
+    ���\n��#\b �\x13\vC�=4�p�\x0eL�\x1c7C�\x1f/�#2�\b��\v�#4����"
+  learner_created: true
+- name: src/previous/Main4.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/58/stages/316/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Tue, 09 Feb 2021 01:05:45 UTC
 record: -1

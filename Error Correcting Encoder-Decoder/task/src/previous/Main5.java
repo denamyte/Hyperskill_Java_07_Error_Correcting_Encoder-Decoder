@@ -1,17 +1,17 @@
-package correcter;
+package previous;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.IntStream;
 
-public class Main {
+public class Main5 {
     private static final Map<String, Operation> operationMap = Map.of(
             "encode", new EncodeOperation(),
             "send", new SendOperation(),
             "decode", new DecodeOperation()
     );
 
-    public static void main(String[] args) {
+    public static void main_(String[] args) {
         System.out.print("Write a mode: ");
         operationMap.get(new Scanner(System.in).nextLine()).go();
     }
